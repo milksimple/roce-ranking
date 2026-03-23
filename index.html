@@ -157,7 +157,7 @@
   }
 
   h1 {
-    font-size: clamp(32px, 5vw, 56px);
+    font-size: 24px;
     font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.02em;
@@ -273,6 +273,7 @@
   }
 
   .dataTables_wrapper { padding: 0; color: var(--text); }
+  .dataTables_scrollBody { overflow-x: auto !important; }
 
   .dataTables_wrapper .dataTables_filter {
     padding: 16px 24px;
@@ -517,7 +518,7 @@
   }
 
   .hero-title {
-    font-size: clamp(52px, 9vw, 96px);
+    font-size: clamp(28px, 3.5vw, 48px);
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.03em;
@@ -568,6 +569,39 @@
   }
 
   .footer-text a { color: var(--accent); text-decoration: none; }
+
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    .hero-banner { padding: 36px 16px 28px; }
+    .hero-title { font-size: 32px; }
+    .hero-sub { font-size: 12px; }
+
+    .container { padding: 24px 12px; }
+
+    h1 { font-size: 20px; }
+
+    .stats-bar { gap: 4px; }
+    .stat-card { min-width: 0; flex: 1 1 40%; padding: 10px 12px; }
+    .stat-value { font-size: 18px; }
+    .stat-label { font-size: 9px; }
+
+    .formula-bar { display: none; }
+
+    /* 表格容器可以左右滑动 */
+    .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    table.dataTable { min-width: 700px; }
+
+    table.dataTable thead th { padding: 10px 8px !important; font-size: 10px !important; white-space: nowrap; }
+    table.dataTable tbody td { padding: 10px 8px !important; font-size: 12px !important; }
+
+    .name-cell { max-width: 120px !important; }
+    .roce-badge { font-size: 11px; padding: 2px 6px; }
+
+    .dataTables_wrapper .dataTables_filter input { width: 160px !important; }
+
+    footer { flex-direction: column; align-items: flex-start; }
+  }
 </style>
 </head>
 <body>
@@ -745,6 +779,7 @@ fetch('financial_data_detailed.json')
       pageLength: 50,
       lengthMenu: [25, 50, 100, 250],
       order: [],
+      scrollX: true,
       columnDefs: [
         { orderable: true, targets: '_all' },
         { width: '50px', targets: 0 },
