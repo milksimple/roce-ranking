@@ -258,6 +258,20 @@
     overflow: hidden;
   }
 
+  @media (max-width: 768px) {
+    .table-wrapper {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    .dataTables_wrapper {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+    }
+    .dataTables_scroll {
+      overflow-x: auto !important;
+    }
+  }
+
   .table-header {
     padding: 20px 24px;
     border-bottom: 1px solid var(--border);
