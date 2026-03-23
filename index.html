@@ -157,7 +157,7 @@
   }
 
   h1 {
-    font-size: 24px;
+    font-size: clamp(32px, 5vw, 56px);
     font-weight: 800;
     line-height: 1.05;
     letter-spacing: -0.02em;
@@ -517,7 +517,7 @@
   }
 
   .hero-title {
-    font-size: clamp(28px, 3.5vw, 48px);
+    font-size: clamp(52px, 9vw, 96px);
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.03em;
@@ -568,56 +568,6 @@
   }
 
   .footer-text a { color: var(--accent); text-decoration: none; }
-
-  /* ── Mobile ── */
-  @media (max-width: 768px) {
-    .hero-banner { padding: 36px 16px 28px; }
-    .hero-title { font-size: 32px; }
-    .hero-sub { font-size: 12px; }
-
-    .container { padding: 24px 12px; }
-
-    h1 { font-size: 20px; }
-
-    .stats-bar { gap: 4px; }
-    .stat-card { min-width: 0; flex: 1 1 40%; padding: 10px 12px; }
-    .stat-value { font-size: 18px; }
-    .stat-label { font-size: 9px; }
-
-    .formula-bar { display: none; }
-
-    /* 隐藏手机上不重要的列：各年度数据、Yrs */
-    table.dataTable thead th:nth-child(5),
-    table.dataTable thead th:nth-child(6),
-    table.dataTable thead th:nth-child(7),
-    table.dataTable thead th:nth-child(8),
-    table.dataTable thead th:nth-child(9),
-    table.dataTable thead th:nth-child(10),
-    table.dataTable tbody td:nth-child(5),
-    table.dataTable tbody td:nth-child(6),
-    table.dataTable tbody td:nth-child(7),
-    table.dataTable tbody td:nth-child(8),
-    table.dataTable tbody td:nth-child(9),
-    table.dataTable tbody td:nth-child(10) {
-      display: none !important;
-    }
-
-    /* 缩小表格内边距 */
-    table.dataTable thead th { padding: 10px 8px !important; font-size: 10px !important; }
-    table.dataTable tbody td { padding: 10px 8px !important; font-size: 12px !important; }
-
-    .name-cell { max-width: 160px !important; }
-
-    .roce-badge { font-size: 12px; padding: 2px 7px; }
-
-    /* 搜索栏全宽 */
-    .dataTables_wrapper .dataTables_filter input { width: 100% !important; }
-    .dataTables_wrapper .dataTables_filter label { flex-direction: column; align-items: flex-start; gap: 6px; }
-
-    footer { flex-direction: column; align-items: flex-start; }
-
-    .table-wrapper { border-radius: 8px; }
-  }
 </style>
 </head>
 <body>
