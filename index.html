@@ -495,6 +495,61 @@
     color: var(--text2) !important;
   }
 
+  .hero-banner {
+    width: 100%;
+    text-align: center;
+    padding: 64px 24px 52px;
+    position: relative;
+    z-index: 1;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,229,255,0.07) 0%, transparent 70%);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    opacity: 0.8;
+  }
+
+  .hero-title {
+    font-size: clamp(52px, 9vw, 96px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .hero-title span {
+    color: var(--accent);
+    position: relative;
+  }
+
+  .hero-title span::after {
+    content: '';
+    position: absolute;
+    bottom: 4px;
+    left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    opacity: 0.4;
+    border-radius: 2px;
+  }
+
+  .hero-sub {
+    margin-top: 16px;
+    color: var(--text2);
+    font-size: 15px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.03em;
+    opacity: 0.7;
+  }
+
   footer {
     margin-top: 40px;
     padding: 24px 0;
@@ -538,6 +593,13 @@
 </div>
 
 <div id="main" style="display:none;">
+
+<div class="hero-banner">
+  <div class="hero-tag">AI · Value Investing · Powered by SEC EDGAR</div>
+  <div class="hero-title">AI <span>Buffett</span> Assistant</div>
+  <div class="hero-sub">Identify high-quality businesses using Warren Buffett's core metric</div>
+</div>
+
 <div class="container">
 
   <header>
@@ -608,6 +670,7 @@
     <span class="footer-text">ROCE = EBIT / (Total Assets − Current Liabilities)</span>
   </footer>
 
+</div>
 </div>
 </div>
 
