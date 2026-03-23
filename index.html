@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>US Listed Companies — ROCE Ranking</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181c23;
+    --border: #222630;
+    --border2: #2a303d;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --text: #e2e8f0;
+    --text2: #8892a4;
+    --text3: #4a5568;
+    --green: #00e676;
+    --green2: #69f0ae;
+    --red: #ff5252;
+    --red2: #ff867f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 24px;
+  }
+
+  #loading {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    gap: 24px;
+  }
+
+  .loading-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+  }
+
+  .loading-sub {
+    font-size: 13px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #error {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    flex-direction: column;
+    gap: 20px;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .error-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--red);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .error-msg {
+    font-size: 14px;
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+    line-height: 2;
+    max-width: 640px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--red);
+    padding: 24px 32px;
+    border-radius: 0 8px 8px 0;
+    text-align: left;
+  }
+
+  .error-msg code {
+    background: var(--surface2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--accent);
+    font-size: 13px;
+  }
+
+  header { margin-bottom: 48px; }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    margin-top: 12px;
+    color: var(--text2);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 2px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 24px;
+    flex: 1;
+    min-width: 140px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.4;
+  }
+
+  .stat-card:first-child { border-radius: 8px 0 0 8px; }
+  .stat-card:last-child { border-radius: 0 8px 8px 0; }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+
+  .formula-bar {
+    margin-top: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--accent2);
+    padding: 14px 20px;
+    border-radius: 0 6px 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .formula-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .formula-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .formula-text strong { color: var(--accent); font-weight: 500; }
+
+  .table-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .table-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .dataTables_wrapper { padding: 0; color: var(--text); }
+
+  .dataTables_wrapper .dataTables_filter {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dataTables_wrapper .dataTables_filter label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text2);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .dataTables_wrapper .dataTables_filter input {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 280px !important;
+    margin-left: 0 !important;
+  }
+
+  .dataTables_wrapper .dataTables_filter input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
+  }
+
+  .dataTables_wrapper .dataTables_length {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dataTables_wrapper .dataTables_length label {
+    color: var(--text2);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dataTables_wrapper .dataTables_length select {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .dataTables_wrapper .dataTables_info {
+    padding: 16px 24px;
+    color: var(--text3);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    border-top: 1px solid var(--border);
+  }
+
+  .dataTables_wrapper .dataTables_paginate {
+    padding: 12px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: transparent !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text2) !important;
+    border-radius: 4px !important;
+    padding: 6px 12px !important;
+    font-family: 'DM Mono', monospace !important;
+    font-size: 12px !important;
+    margin: 0 2px !important;
+    cursor: pointer !important;
+    transition: all 0.15s !important;
+  }
+
+  .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: var(--surface2) !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+  }
+
+  .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+    color: var(--bg) !important;
+    font-weight: 700 !important;
+  }
+
+  .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+  }
+
+  table.dataTable {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 0 !important;
+  }
+
+  table.dataTable thead th {
+    background: var(--surface2) !important;
+    color: var(--text3) !important;
+    font-family: 'DM Mono', monospace !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    padding: 14px 16px !important;
+    border-bottom: 1px solid var(--border2) !important;
+    border-right: none !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+  }
+
+  table.dataTable thead th:hover { color: var(--text) !important; }
+
+  table.dataTable thead .sorting_asc,
+  table.dataTable thead .sorting_desc { color: var(--accent) !important; }
+
+  table.dataTable tbody tr {
+    border-bottom: 1px solid var(--border) !important;
+    transition: background 0.1s !important;
+  }
+
+  table.dataTable tbody tr:hover { background: var(--surface2) !important; }
+  table.dataTable tbody tr:last-child { border-bottom: none !important; }
+
+  table.dataTable tbody td {
+    padding: 12px 16px !important;
+    color: var(--text) !important;
+    font-size: 13px !important;
+    border: none !important;
+    vertical-align: middle !important;
+  }
+
+  .rank-cell {
+    font-family: 'DM Mono', monospace !important;
+    font-size: 12px !important;
+    color: var(--text3) !important;
+    text-align: right !important;
+  }
+
+  .ticker-cell {
+    font-family: 'DM Mono', monospace !important;
+    font-weight: 500 !important;
+    color: var(--accent) !important;
+    white-space: nowrap !important;
+  }
+
+  .name-cell {
+    color: var(--text2) !important;
+    max-width: 280px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .years-cell {
+    font-family: 'DM Mono', monospace !important;
+    font-size: 11px !important;
+    color: var(--text3) !important;
+    text-align: center !important;
+  }
+
+  .na {
+    color: var(--text3) !important;
+    font-family: 'DM Mono', monospace !important;
+    font-size: 11px !important;
+    text-align: center !important;
+  }
+
+  .roce-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  .roce-badge.positive-high {
+    background: rgba(0,230,118,0.12);
+    color: var(--green);
+    border: 1px solid rgba(0,230,118,0.25);
+  }
+
+  .roce-badge.positive {
+    background: rgba(105,240,174,0.1);
+    color: var(--green2);
+    border: 1px solid rgba(105,240,174,0.2);
+  }
+
+  .roce-badge.negative {
+    background: rgba(255,134,127,0.1);
+    color: var(--red2);
+    border: 1px solid rgba(255,134,127,0.2);
+  }
+
+  .roce-badge.negative-deep {
+    background: rgba(255,82,82,0.12);
+    color: var(--red);
+    border: 1px solid rgba(255,82,82,0.25);
+  }
+
+  .year-val {
+    font-family: 'DM Mono', monospace !important;
+    font-size: 12px !important;
+    text-align: right !important;
+    color: var(--text2) !important;
+  }
+
+  footer {
+    margin-top: 40px;
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .footer-text a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-title">Loading financial data...</div>
+  <div class="loading-sub">Reading financial_data_detailed.json</div>
+</div>
+
+<div id="error">
+  <div class="error-title">⚠ Cannot load data</div>
+  <div class="error-msg">
+    Browsers block local file access for security reasons.<br>
+    You need to start a local server first:<br><br>
+    Step 1 — Open Terminal and run:<br>
+    <code>cd ~/Documents/us-stocks-roce</code><br>
+    <code>python3 -m http.server 8080</code><br><br>
+    Step 2 — Open your browser and go to:<br>
+    <code>http://localhost:8080/roce_ranking.html</code><br><br>
+    Keep the Terminal window open while browsing.
+  </div>
+</div>
+
+<div id="main" style="display:none;">
+<div class="container">
+
+  <header>
+    <div class="eyebrow">SEC EDGAR · US Listed Companies</div>
+    <h1>ROCE<span> Ranking</span></h1>
+    <p class="subtitle">Return on Capital Employed — 5-Year Average · All US Listed Companies · Data: SEC EDGAR</p>
+
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-label">Companies</div>
+        <div class="stat-value accent" id="stat-total">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Positive ROCE</div>
+        <div class="stat-value green" id="stat-positive">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Negative ROCE</div>
+        <div class="stat-value red" id="stat-negative">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Median ROCE</div>
+        <div class="stat-value" id="stat-median">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Data Source</div>
+        <div class="stat-value" style="font-size:16px;color:var(--text2)">SEC EDGAR</div>
+      </div>
+    </div>
+
+    <div class="formula-bar">
+      <span class="formula-label">Formula</span>
+      <span class="formula-text">
+        <strong>ROCE</strong> = EBIT ÷ Capital Employed &nbsp;·&nbsp;
+        Capital Employed = Total Assets − Current Liabilities
+      </span>
+    </div>
+  </header>
+
+  <div class="table-wrapper">
+    <div class="table-header">
+      <span class="table-title">All Companies · Sorted by 5Y Avg ROCE (High → Low)</span>
+    </div>
+    <table id="roceTable" class="dataTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ticker</th>
+          <th>Company Name</th>
+          <th>5Y Avg ROCE</th>
+          <th>2024</th>
+          <th>2023</th>
+          <th>2022</th>
+          <th>2021</th>
+          <th>2020</th>
+          <th>Yrs</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    <span class="footer-text">
+      Data sourced from <a href="https://www.sec.gov/cgi-bin/browse-edgar" target="_blank">SEC EDGAR</a>
+      · XBRL Financial Statements · <span id="footer-count">—</span> companies analyzed
+    </span>
+    <span class="footer-text">ROCE = EBIT / (Total Assets − Current Liabilities)</span>
+  </footer>
+
+</div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script>
+fetch('financial_data_detailed.json')
+  .then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(data => {
+    const raw = Array.isArray(data) ? data : (data.results || []);
+
+    // 过滤有效数据并排序（从大到小）
+    const companies = raw
+      .filter(r => r.avg_roce_5y !== null && r.avg_roce_5y !== undefined)
+      .sort((a, b) => b.avg_roce_5y - a.avg_roce_5y);
+
+    // 统计数据
+    const total = companies.length;
+    const positive = companies.filter(c => c.avg_roce_5y > 0).length;
+    const negative = total - positive;
+    const vals = [...companies].map(c => c.avg_roce_5y).sort((a,b) => a - b);
+    const mid = Math.floor(vals.length / 2);
+    const median = vals.length % 2 !== 0 ? vals[mid] : (vals[mid-1] + vals[mid]) / 2;
+
+    document.getElementById('stat-total').textContent = total.toLocaleString();
+    document.getElementById('stat-positive').textContent = positive.toLocaleString();
+    document.getElementById('stat-negative').textContent = negative.toLocaleString();
+    document.getElementById('stat-median').textContent = (median * 100).toFixed(1) + '%';
+    document.getElementById('footer-count').textContent = total.toLocaleString();
+
+    // 生成表格行
+    const tbody = document.getElementById('tableBody');
+    const years = ['2024', '2023', '2022', '2021', '2020'];
+
+    companies.forEach((c, i) => {
+      const avg = c.avg_roce_5y;
+      const avgPct = (avg * 100).toFixed(2) + '%';
+
+      let badgeClass = 'negative-deep';
+      if (avg > 0.15) badgeClass = 'positive-high';
+      else if (avg > 0) badgeClass = 'positive';
+      else if (avg > -0.5) badgeClass = 'negative';
+
+      const roceByYear = c.roce_by_year || {};
+      const yearCells = years.map(yr => {
+        const val = roceByYear[yr];
+        return val !== undefined && val !== null
+          ? `<td class="year-val">${(val * 100).toFixed(1)}%</td>`
+          : `<td class="na">—</td>`;
+      }).join('');
+
+      const name = (c.company_name || '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+      tbody.insertAdjacentHTML('beforeend', `
+        <tr>
+          <td class="rank-cell">${i + 1}</td>
+          <td class="ticker-cell">${c.ticker}</td>
+          <td class="name-cell" title="${name}">${name}</td>
+          <td><span class="roce-badge ${badgeClass}">${avgPct}</span></td>
+          ${yearCells}
+          <td class="years-cell">${c.years_available || '—'}yr</td>
+        </tr>
+      `);
+    });
+
+    // 初始化 DataTable
+    $('#roceTable').DataTable({
+      pageLength: 50,
+      lengthMenu: [25, 50, 100, 250],
+      order: [],
+      columnDefs: [
+        { orderable: true, targets: '_all' },
+        { width: '50px', targets: 0 },
+        { width: '80px', targets: 1 },
+        { width: '120px', targets: 3 },
+      ],
+      language: {
+        search: 'Search:',
+        lengthMenu: 'Show _MENU_ companies',
+        info: 'Showing _START_ to _END_ of _TOTAL_ companies',
+        paginate: { first: '«', last: '»', next: '›', previous: '‹' }
+      },
+      dom: 'lfrtip'
+    });
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+  })
+  .catch(err => {
+    console.error(err);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'flex';
+  });
+</script>
+</body>
+</html>
